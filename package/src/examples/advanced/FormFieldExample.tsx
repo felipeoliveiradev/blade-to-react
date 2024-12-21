@@ -11,19 +11,13 @@ interface FormFieldsProps {
 
 @BladeComponent('form-fields')
 export function FormFields({ initialData = {} }: FormFieldsProps) {
-  // Estado compartilhado para o formulário
   const [formData, setFormData] = useBlade('clientForm');
-  
-  // Estado para erros de validação
   const [validationErrors, setValidationErrors] = useBlade('validationErrors');
 
   useEffect(() => {
-    // Escuta erros de validação do backend
     blade.listen('backend:validation', (errors) => {
       setValidationErrors(errors);
     });
-
-    // Escuta reset do form
     blade.listen('form:reset', () => {
       setFormData({});
       setValidationErrors({});
@@ -33,8 +27,6 @@ export function FormFields({ initialData = {} }: FormFieldsProps) {
   const handleSelectChange = (field: string, value: string) => {
     const newData = { ...formData, [field]: value };
     setFormData(newData);
-
-    // Emite evento para o Blade saber que houve mudança
     blade.emit('form:changed', {
       field,
       value,

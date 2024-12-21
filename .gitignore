@@ -1,4 +1,40 @@
-.history
+# Dependencies
 node_modules/
+vendor/
+.history
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+
+# IDE & Editors
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Tests
+coverage/
+.phpunit.cache/
+
+# Cache
+.cache/
+.temp/
+
+# Composer
+composer.lock
 package-lock.json
-dist
+yarn.lock
