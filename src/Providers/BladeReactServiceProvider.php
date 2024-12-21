@@ -1,6 +1,6 @@
 <?php
 
-namespace BladeToReact;
+namespace BladeToReact\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
@@ -13,42 +13,49 @@ class BladeReactServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/config/blade-to-react.php', 'blade-to-react'
+            dirname(__DIR__) . '/config/blade-to-react.php', 'blade-to-react'
         );
     }
 
     public function boot()
     {
-        // Publicar configuração
+        // Primeiro carregar as views
+        $this->loadViewsFrom(dirname(__DIR__) . '/resources/views', 'blade-react');
+
+        // Publicar assets
         $this->publishes([
-            __DIR__ . '/config/blade-to-react.php' => config_path('blade-to-react.php'),
-            __DIR__ . '/resources/views' => resource_path('views/vendor/blade-to-react'),
+            dirname(__DIR__) . '/config/blade-to-react.php' => config_path('blade-to-react.php'),
+            dirname(__DIR__) . '/resources/views' => resource_path('views/vendor/blade-react'),
         ], 'blade-to-react');
 
         // Registrar diretiva @react
         Blade::directive('react', function ($expression) {
             $this->hasReactComponents = true;
             
-            $parts = explode(',', $expression);
-            $name = trim($parts[0]);
-            array_shift($parts);
-            $props = implode(',', $parts);
-            
+            $parts = explode(',', $expression, 2);
+            $component = trim($parts[0], "'\"");
+            $props = isset($parts[1]) ? trim($parts[1]) : '[]';
+
             return "<?php echo view('blade-react::components.react-wrapper', [
-                'component' => $name,
-                'props' => $props
+                'component' => '{$component}',
+                'props' => {$props}
             ])->render(); ?>";
         });
 
-        // Registrar componente blade x-react
+        // Registrar componente blade x-react (agora usando o namespace correto)
         Blade::component('blade-react::components.react', 'react');
 
-        // Compartilhar variável com todas as views
+        // Compartilhar variável
         View::composer('*', function ($view) {
             $view->with('hasReactComponents', $this->hasReactComponents);
         });
 
-        // Carregar views
-        $this->loadViewsFrom(__DIR__ . '/resources/views', 'blade-react');
+        // Debug para desenvolvimento
+        if ($this->app->environment('local')) {
+            $viewPath = dirname(__DIR__) . '/resources/views/components/react-wrapper.blade.php';
+            if (!file_exists($viewPath)) {
+                throw new \Exception("React wrapper view not found at: {$viewPath}");
+            }
+        }
     }
 }

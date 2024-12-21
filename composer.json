@@ -1,24 +1,29 @@
 {
-    "name": "blade-to-react/laravel",
-    "version": "1.0.0",
-    "description": "Laravel integration for blade-to-react",
-    "keywords": ["laravel", "blade", "react", "integration"],
-    "homepage": "https://github.com/seuusuario/blade-to-react",
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "type": "library",
-    "authors": [
+  "name": "blade-to-react/laravel",
+  "version": "1.0.0",
+  "description": "Laravel integration for blade-to-react",
+  "keywords": [
+    "laravel",
+    "blade",
+    "react",
+    "integration"
+  ],
+  "homepage": "https://github.com/seuusuario/blade-to-react",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "type": "library",
+  "authors": [
     {
-        "name": "Felipe Oliveira",
-        "email": "felipeoliveiradeveloper@gmail.com"
+      "name": "Felipe Oliveira",
+      "email": "felipeoliveiradeveloper@gmail.com"
     }
-    ],
-    "license": "MIT",
-    "require": {
-        "php": "^8.0",
-        "laravel/framework": "^9.0|^10.0"
-    },
-    "autoload": {
+  ],
+  "license": "MIT",
+  "require": {
+    "php": "^8.0",
+    "laravel/framework": "^9.0|^10.0|^11.0"
+  },
+  "autoload": {
     "psr-4": {
       "BladeToReact\\": "src/"
     }
@@ -30,9 +35,9 @@
       ]
     }
   },
-    "scripts": {
-        "post-install-cmd": [
-            "@php artisan vendor:publish --tag=blade-to-react-config"
-        ]
-    }
+  "scripts": {
+    "post-install-cmd": [
+      "@php artisan vendor:publish --tag=blade-to-react-config"
+    ]
+  }
 }
