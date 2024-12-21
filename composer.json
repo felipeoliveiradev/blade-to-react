@@ -2,7 +2,16 @@
     "name": "blade-to-react/laravel",
     "version": "1.0.0",
     "description": "Laravel integration for blade-to-react",
+    "keywords": ["laravel", "blade", "react", "integration"],
+    "homepage": "https://github.com/seuusuario/blade-to-react",
     "type": "library",
+    "authors": [
+    {
+        "name": "Felipe Oliveira",
+        "email": "felipeoliveiradeveloper@gmail.com"
+    }
+    ],
+    "license": "MIT",
     "require": {
         "php": "^8.0",
         "laravel/framework": "^9.0|^10.0"
