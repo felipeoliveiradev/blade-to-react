@@ -1,5 +1,6 @@
 {
     "name": "blade-to-react/laravel",
+    "version": "1.0.0",
     "description": "Laravel integration for blade-to-react",
     "type": "library",
     "require": {

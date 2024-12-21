@@ -1,5 +1,5 @@
 {
-  "name": "@blade-to-react",
+  "name": "blade-to-react",
   "version": "1.0.0",
   "description": "Seamless integration between Laravel Blade and React components",
   "main": "dist/index.js",
