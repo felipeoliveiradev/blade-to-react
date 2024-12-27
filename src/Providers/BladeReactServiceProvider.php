@@ -36,14 +36,14 @@ class BladeReactServiceProvider extends ServiceProvider
             $component = trim($parts[0], "'\"");
             $props = isset($parts[1]) ? trim($parts[1]) : '[]';
 
-            return "<?php echo view('blade-react::components.react-wrapper', [
+            return "<?php echo view('blade-react::components.react', [
                 'component' => '{$component}',
                 'props' => {$props}
             ])->render(); ?>";
         });
 
         // Registrar componente blade x-react (agora usando o namespace correto)
-        Blade::component('blade-react::components.react', 'react');
+        Blade::component('blade-react::react', 'react');
 
         // Compartilhar variável
         View::composer('*', function ($view) {

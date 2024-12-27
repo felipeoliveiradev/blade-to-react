@@ -1,5 +1,5 @@
 export { bridge } from './core/Bridge';
-export { useBlade, useBladeForm, useBladeSlots } from './hooks';
+export * from './hooks';
 
 export function BladeComponent(name: string) {
     return function(component: any) {

@@ -27,6 +27,7 @@ export interface BladeAPI {
   register: (name: string, component: any) => void;
   integrate: (name: string, library: any, config?: any) => void;
   debug: () => void;
+  init: (config: any) => void;
 }
 
 // Interface para libs externas

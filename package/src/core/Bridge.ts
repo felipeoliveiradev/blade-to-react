@@ -32,12 +32,11 @@ class Bridge {
       set: this.set.bind(this),
       listen: this.listen.bind(this),
       emit: this.emit.bind(this),
-  
       // Componentes
       mount: this.mount.bind(this),
       register: this.register.bind(this),
       unmount: this.unmount.bind(this),
-      
+      init: this.init.bind(this),
       // Integrações
       integrate: this.integrate.bind(this),
       
@@ -76,7 +75,15 @@ class Bridge {
       this.mountElement(el as HTMLElement);
     });
   }
-
+  init(config: { debug: boolean; autoInit: boolean }): void {
+    this.config = { ...this.config, ...config };
+    if (this.config.debug) {
+        console.log('[BladeReact] Initialized with config:', config);
+    }
+    if (this.config.autoInit) {
+        this.initAutoMount();
+    }
+}
   private mountElement(element: HTMLElement) {
     const name = element.dataset.bladeReact;
     if (!name) return;
