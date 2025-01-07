@@ -84,18 +84,24 @@ class Bridge {
         this.initAutoMount();
     }
 }
-  private mountElement(element: HTMLElement) {
-    const name = element.dataset.bladeReact;
-    if (!name) return;
+private mountElement(element: HTMLElement) {
+  const name = element.dataset.bladeReact;
+  if (!name) return;
 
-    // Coleta props do elemento
-    const props = this.getElementProps(element);
-    
-    // Coleta slots
-    const slots = this.getElementSlots(element);
+  // Coleta props e slots
+  const props = this.getElementProps(element);
+  
+  // Coleta slots e conteúdo default
+  const defaultContent = element.innerHTML.trim();
+  const slots = {
+      default: defaultContent,
+      ...this.getElementSlots(element)
+  };
 
-    this.mount(name, { ...props, slots });
-  }
+  console.log('[Debug] Mounting with:', { name, props, slots });
+  
+  this.mount(name, { ...props, slots });
+}
 
   private getElementProps(element: HTMLElement): Record<string, any> {
     const props: Record<string, any> = {};
@@ -121,13 +127,26 @@ class Bridge {
   private getElementSlots(element: HTMLElement): Record<string, string> {
     const slots: Record<string, string> = {};
     
-    element.querySelectorAll('[data-slot]').forEach(slot => {
-      const name = slot.getAttribute('data-slot') || 'default';
-      slots[name] = slot.innerHTML;
+    // Procura todos os elementos com data-slot
+    const slotElements = element.querySelectorAll('[data-slot]');
+    slotElements.forEach(slotElement => {
+        const slotName = slotElement.getAttribute('data-slot');
+        if (slotName) {
+            slots[slotName] = slotElement.innerHTML.trim();
+            // Remove o elemento do slot após pegar seu conteúdo
+            slotElement.remove();
+        }
     });
 
+    // Pega o conteúdo restante como slot default
+    const defaultContent = element.innerHTML.trim();
+    if (defaultContent) {
+        slots.default = defaultContent;
+    }
+
+    console.log('[Debug] Collected slots:', slots);
     return slots;
-  }
+}
 
   // Core API Methods
   static getInstance(config?: BridgeConfig): Bridge {
@@ -173,7 +192,6 @@ class Bridge {
       console.log(`[BladeReact] Registered component: ${name}`);
     }
   }
-
   mount(name: string, props: any = {}): void {
     const config = this.components.get(name);
     if (!config) {
@@ -187,16 +205,22 @@ class Bridge {
       return;
     }
 
-    const root = createRoot(element);
-    root.render(React.createElement(config.component, props));
+    try {
+      const root = createRoot(element);
+      // Limpa o conteúdo depois de coletar os slots
+      element.innerHTML = '';
+      root.render(React.createElement(config.component, props));
 
-    config.root = root;
-    config.props = props;
+      config.root = root;
+      config.props = props;
 
-    if (this.config.debug) {
-      console.log(`[BladeReact] Mounted component: ${name}`, { props });
+      if (this.config.debug) {
+        console.log(`[BladeReact] Mounted component: ${name}`, { props });
+      }
+    } catch (error) {
+      console.error(`[BladeReact] Error mounting component:`, error);
     }
-  }
+}
 
   unmount(name: string): void {
     const config = this.components.get(name);
