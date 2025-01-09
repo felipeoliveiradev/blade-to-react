@@ -5,6 +5,7 @@ export interface BladeState {
 export interface BridgeConfig {
   debug?: boolean;
   autoInit?: boolean;
+  errorHandler?(error: Error): void;
 }
 
 export interface ComponentConfig {
@@ -15,24 +16,34 @@ export interface ComponentConfig {
   instance?: any;
 }
 
+export interface ComponentChild {
+  type: string;
+  props: Record<string, any>;
+  slots?: SlotProps;
+  children?: ComponentChild[];
+}
+
 // Interface para a API global do blade
 export interface BladeAPI {
-  get(): Record<string, any>;
-  get(key: string): any;
-  set: (key: string, value: any) => void;
-  listen: (key: string, callback: (value: any) => void) => () => void;
-  emit: (event: string, data?: any) => void;
-  mount: (name: string, props?: any) => void;
-  unmount: (name: string) => void;
-  register: (name: string, component: any) => void;
-  integrate: (name: string, library: any, config?: any) => void;
-  debug: () => void;
-  init: (config: any) => void;
+  get(key?: string): any;
+  set(key: string, value: any): void;
+  listen(key: string, callback: (value: any) => void): () => void;
+  emit(event: string, data?: any): void;
+  mount: (name: string, element: HTMLElement) => void;
+  unmount(name: string): void;
+  register(name: string, component: React.ComponentType<any>): void;
+  integrate(name: string, library: any, config?: any): void;
+  debug(): void;
+  init(config: BridgeConfig): void;
 }
 
 // Interface para libs externas
 export interface ExternalLibrary {
   [key: string]: any;
+}
+
+export interface SlotProps {
+  [key: string]: string;
 }
 
 declare global {

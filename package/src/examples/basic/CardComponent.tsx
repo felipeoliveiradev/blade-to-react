@@ -1,13 +1,12 @@
 // examples/basic/CardComponent.tsx
 import React                             from 'react';
-import { BladeComponent, useBladeSlots } from '@blade-to-react/core';
+import {  useBladeSlots } from '../../';
 
 interface CardProps {
   title?: string;
   slots?: Record<string, string>;
 }
 
-@BladeComponent('card-component')
 export function CardComponent({ title, slots = {} }: CardProps) {
   const { hasSlot, renderSlot } = useBladeSlots(slots);
   

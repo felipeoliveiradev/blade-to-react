@@ -13,52 +13,71 @@ class BladeReactServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(
-            dirname(__DIR__) . '/config/blade-to-react.php', 'blade-to-react'
+            __DIR__.'/../config/blade-to-react.php',
+            'blade-to-react'
         );
     }
 
     public function boot()
     {
-        // Primeiro carregar as views
-        $this->loadViewsFrom(dirname(__DIR__) . '/resources/views', 'blade-react');
+        $this->loadViewsFrom(__DIR__.'/../resources/views/components', 'blade-react');
 
-        // Publicar assets
         $this->publishes([
-            dirname(__DIR__) . '/config/blade-to-react.php' => config_path('blade-to-react.php'),
-            dirname(__DIR__) . '/resources/views' => resource_path('views/vendor/blade-react'),
+            __DIR__.'/../config/blade-to-react.php' => config_path('blade-to-react.php'),
+            __DIR__.'/../resources/views/components' => resource_path('views/vendor/blade-react'),
         ], 'blade-to-react');
 
-        // Registrar diretiva @react
+        // Registra a diretiva @react
         Blade::directive('react', function ($expression) {
             $this->hasReactComponents = true;
-            
-            $parts = explode(',', $expression, 2);
-            $component = trim($parts[0], "'\"");
-            $props = isset($parts[1]) ? trim($parts[1]) : '[]';
 
-            return "<?php echo view('blade-react::components.react', [
+            // Parse mais robusto da expressão
+            preg_match('/([^,]+)(?:,(.+))?/', $expression, $matches);
+            $component = trim($matches[1] ?? '', "'\"");
+            $props = isset($matches[2]) ? trim($matches[2]) : '[]';
+
+            return "<?php echo view('blade-react::react', [
                 'component' => '{$component}',
-                'props' => {$props}
+                'props' => {$props},
             ])->render(); ?>";
         });
 
-        // Registrar componente blade x-react (agora usando o namespace correto)
+        // Registra os componentes
         Blade::component('blade-react::react', 'react');
-        View::composer("blade-react::*", function($view) {
-            $component = $view->getData()['__laravel_slots'] ?? [];
-            $view->with('componentSlots', $component);
-        });
-        // Compartilhar variável
-        View::composer('*', function ($view) {
-            $view->with('hasReactComponents', $this->hasReactComponents);
-           
+        Blade::component('blade-react::react-wrapper', 'react-wrapper');
+
+        // Composer para processar slots
+        View::composer("blade-react::*", function ($view) {
+            $data = $view->getData();
+            $slots = $data['__laravel_slots'] ?? [];
+            $attributes = $data['attributes'] ?? [];
+
+            // Adiciona informações extras ao view
+            $view->with('componentSlots', $slots);
+            $view->with('componentAttributes', $attributes);
         });
 
-        // Debug para desenvolvimento
+        // Composer global para flag de React
+        View::composer('*', function ($view) {
+            $view->with('hasReactComponents', $this->hasReactComponents);
+        });
+
+        // Verificação de arquivos em ambiente local
         if ($this->app->environment('local')) {
-            $viewPath = dirname(__DIR__) . '/resources/views/components/react-wrapper.blade.php';
+            $this->verifyRequiredFiles();
+        }
+    }
+
+    private function verifyRequiredFiles()
+    {
+        $viewPaths = [
+            __DIR__.'/../resources/views/components/react.blade.php',
+            __DIR__.'/../resources/views/components/react-wrapper.blade.php'
+        ];
+
+        foreach ($viewPaths as $viewPath) {
             if (!file_exists($viewPath)) {
-                throw new \Exception("React wrapper view not found at: {$viewPath}");
+                throw new \Exception("React view not found at: {$viewPath}");
             }
         }
     }

@@ -1,8 +1,7 @@
 // examples/basic/SimpleComponent.tsx
 import React                        from 'react';
-import { BladeComponent, useBlade } from '@blade-to-react/core';
+import { useBlade } from '../../';
 
-@BladeComponent('simple-component')
 export function SimpleComponent() {
   const [count, setCount] = useBlade('count');
   
