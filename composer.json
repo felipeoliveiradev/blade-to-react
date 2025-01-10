@@ -1,6 +1,6 @@
 {
   "name": "blade-to-react/laravel",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Laravel integration for blade-to-react",
   "keywords": [
     "laravel",
