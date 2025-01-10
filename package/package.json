@@ -1,6 +1,6 @@
 {
   "name": "blade-to-react",
-  "version": "1.0.4",
+  "version": "1.0.1",
   "description": "Seamless integration between Laravel Blade and React components",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",

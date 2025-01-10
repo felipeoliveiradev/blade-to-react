@@ -1,6 +1,6 @@
 // examples/advanced/FormFields.tsx
 import React, { useEffect }         from 'react';
-import {  bridge, useBlade } from '../../';
+import { BladeComponent, useBlade } from '@blade-to-react/core';
 
 interface FormFieldsProps {
   initialData?: {
@@ -9,15 +9,16 @@ interface FormFieldsProps {
   };
 }
 
+@BladeComponent('form-fields')
 export function FormFields({ initialData = {} }: FormFieldsProps) {
   const [formData, setFormData] = useBlade('clientForm');
   const [validationErrors, setValidationErrors] = useBlade('validationErrors');
 
   useEffect(() => {
-    bridge.listen('backend:validation', (errors) => {
+    blade.listen('backend:validation', (errors) => {
       setValidationErrors(errors);
     });
-    bridge.listen('form:reset', () => {
+    blade.listen('form:reset', () => {
       setFormData({});
       setValidationErrors({});
     });
@@ -26,7 +27,7 @@ export function FormFields({ initialData = {} }: FormFieldsProps) {
   const handleSelectChange = (field: string, value: string) => {
     const newData = { ...formData, [field]: value };
     setFormData(newData);
-    bridge.emit('form:changed', {
+    blade.emit('form:changed', {
       field,
       value,
       isValid: true // Você pode adicionar validação aqui

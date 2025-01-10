@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  BladeAPI,
-  BridgeConfig,
-  ComponentChild,
-  SlotProps
-} from '../types';
+import { BladeAPI, BridgeConfig } from '../types';
 import { ComponentRegistry } from './ComponentRegistry';
 import { RootManager } from './RootManager';
 
@@ -22,7 +17,7 @@ export class Bridge implements BladeAPI {
   private constructor() {
     this.componentRegistry = new ComponentRegistry();
     this.rootManager = new RootManager();
-    this.initGlobal()
+    this.initGlobal();
   }
 
   private initGlobal(): void {
@@ -38,11 +33,8 @@ export class Bridge implements BladeAPI {
       this.initMount();
     }
   }
-  private hasChildComponents(element: HTMLElement): boolean {
-    return Array.from(element.children).some(child =>
-        child instanceof HTMLElement && child.dataset.bladeReact
-    );
-  }
+
+
   private initMount(): void {
     if (!this.rootManager.isObserverActive()) {
       const observer = new MutationObserver(this.handleMutations.bind(this));
@@ -69,10 +61,10 @@ export class Bridge implements BladeAPI {
     const componentName = element.dataset.bladeReact;
     if (!componentName) return;
 
-    // Se já foi montado, pula
+    // Skip if already mounted
     if (element.hasAttribute('data-mounted')) return;
 
-    // Verifica se o componente existe no registro
+    // Check if the component exists in the registry
     if (!this.componentRegistry.has(componentName)) {
       console.warn(`[BladeReact] Component ${componentName} not registered. Skipping process.`);
       return;
@@ -81,9 +73,6 @@ export class Bridge implements BladeAPI {
     this.mount(componentName, element);
   }
 
-  private isChildComponent(element: HTMLElement): boolean {
-    return !!element.closest('[data-blade-react]:not([data-blade-react="' + element.dataset.bladeReact + '"])');
-  }
 
   private mountExistingComponents(): void {
     document.querySelectorAll('[data-blade-react]:not([data-mounted])').forEach(el => {
@@ -96,42 +85,86 @@ export class Bridge implements BladeAPI {
         return;
       }
 
-      const uniqueId = element.getAttribute('data-unique-id') || componentName;
       this.mount(componentName, element);
     });
   }
+  private buildComponentStructure(element: HTMLElement): React.ReactNode {
+    const componentName = element.dataset.bladeReact;
 
-  private buildComponentStructure(element: HTMLElement): { slots: SlotProps, children: ComponentChild[] } {
-    const slots: SlotProps = {};
-    const children: ComponentChild[] = [];
+    if (!componentName) {
+      return element.outerHTML;
+    }
 
+    const props = this.getElementProps(element);
+    const children: React.ReactNode[] = [];
+    let childIndex = 0;
+
+    // Process child container content
+    const childContainer: any = element.querySelector('template[data-child-container]');
+    if (childContainer) {
+      Array.from(childContainer.content.childNodes).forEach((node: any) => {
+        if (node instanceof HTMLElement) {
+          if (node.dataset.bladeReact) {
+            // Process child Blade React components
+            const childComponent = this.buildComponentStructure(node);
+            if (childComponent) {
+              // Wrap child component with key
+              children.push(React.createElement(
+                  React.Fragment,
+                  { key: `react-child-${childIndex++}` },
+                  childComponent
+              ));
+            }
+          } else if (!node.classList.contains('react-content')) {
+            // Handle regular HTML elements, excluding react-content
+            children.push(
+                React.createElement('div', {
+                  key: `html-child-${childIndex++}`,
+                  dangerouslySetInnerHTML: { __html: node.outerHTML }
+                })
+            );
+          }
+        } else if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
+          // Wrap text nodes with Fragment and key
+          children.push(
+              React.createElement(
+                  React.Fragment,
+                  { key: `text-child-${childIndex++}` },
+                  node.textContent.trim()
+              )
+          );
+        }
+      });
+    }
+
+    // Handle slots
     const slotContainer: any = element.querySelector('template[data-slot-container]');
     if (slotContainer) {
       slotContainer.content.querySelectorAll('[data-slot]').forEach((slot: any) => {
         if (slot instanceof HTMLElement) {
-          const name = slot.getAttribute('data-slot') || 'default';
-          slots[name] = slot.innerHTML;
+          children.push(
+              React.createElement('div', {
+                key: `slot-${slot.getAttribute('data-slot') || '__default'}-${childIndex++}`,
+                dangerouslySetInnerHTML: { __html: slot.innerHTML }
+              })
+          );
         }
       });
     }
 
-    const childContainer: any = element.querySelector('template[data-child-container]');
-    if (childContainer) {
-      Array.from(childContainer.content.children).forEach(child => {
-        if (child instanceof HTMLElement && child.dataset.bladeReact) {
-          children.push({
-            type: child.dataset.bladeReact,
-            props: this.getElementProps(child),
-            ...this.buildComponentStructure(child)
-          });
-        }
-      });
+    // Check if component is registered
+    if (!this.componentRegistry.has(componentName)) {
+      console.warn(`[BladeReact] Component ${componentName} not registered. Rendering children only.`);
+      return children.length > 0 ? React.createElement('div', null, children) : null;
     }
 
-    return { slots, children };
+    // Get and render the registered component
+    const Component: any = this.componentRegistry.get(componentName);
+    return React.createElement(Component, {
+      ...props,
+      children: children.length > 0 ? children : undefined
+    });
   }
-
-
   private getElementProps(element: HTMLElement): Record<string, any> {
     const props: Record<string, any> = {};
 
@@ -141,9 +174,7 @@ export class Bridge implements BladeAPI {
           const key = name
               .replace('data-prop-', '')
               .split('-')
-              .map((part, index) =>
-                  index === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)
-              )
+              .map((part, index) => (index === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)))
               .join('');
 
           try {
@@ -160,7 +191,6 @@ export class Bridge implements BladeAPI {
     this.componentRegistry.register(name, component);
   }
 
-
   public mount(name: string, element: HTMLElement): void {
     const uniqueId = element.getAttribute('data-unique-id') || name;
 
@@ -171,25 +201,16 @@ export class Bridge implements BladeAPI {
 
     if (!this.rootManager.isAlreadyMounted(uniqueId)) {
       try {
-        const Component: any = this.componentRegistry.get(name);
-
         const mountContainer: any = element.querySelector('.react-content');
         if (!mountContainer) {
           console.error(`[BladeReact] No mount container found for ${name}`);
           return;
         }
 
-        const structure = this.buildComponentStructure(element);
-
         const root = this.rootManager.getOrCreateRoot(mountContainer);
         element.setAttribute('data-mounted', 'true');
 
-        root.render(
-            React.createElement(Component, {
-              ...this.getElementProps(element),
-              ...structure
-            })
-        );
+        root.render(this.buildComponentStructure(element));
 
         console.log(`[BladeReact] Successfully mounted ${name}`);
         this.rootManager.setMounted(uniqueId, true);

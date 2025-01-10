@@ -3,4 +3,3 @@ export { useBladeForm } from './useBladeForm';
 export { useBladeSlots } from './useBladeSlots';
 export {useBladeEvent} from "./useBladeEvent"
 export {useAllOptimizations} from "./useAllOptimizations"
-export {useDynamicComponent} from "./useDynamicComponent"

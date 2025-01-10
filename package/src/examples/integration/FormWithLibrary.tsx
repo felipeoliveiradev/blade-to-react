@@ -1,17 +1,17 @@
 // examples/integration/FormWithLibrary.tsx
 import React, { useEffect }         from 'react';
-import { bridge, useBlade } from '../..';
+import { BladeComponent, useBlade } from '@blade-to-react/core';
 
-
+@BladeComponent('form-with-library')
 export function FormWithLibrary() {
   const [formState, setFormState] = useBlade('formState');
 
   useEffect(() => {
     // Exemplo de integração com qualquer lib
-    bridge.integrate('myLibrary', window.MyLibrary, {
+    blade.integrate('myLibrary', window.MyLibrary, {
       onValidate: (isValid: boolean) => {
         setFormState({ isValid });
-        bridge.emit('form:validated', { isValid });
+        blade.emit('form:validated', { isValid });
       }
     });
     
